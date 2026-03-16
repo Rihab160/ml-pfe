@@ -1,20 +1,43 @@
-La Stationnarité : une série temporelle est dite stationnaire si ses propriétés sont constantes dans le temps (moyenne et variance)
-Si la série n'est pas stationnaire (moyenne ou variance évoluent dans le temps ) dans ce cas le modéle risque d'apprendre une structure instable et risque de mal généraliser dans le futur 
-le test de Dickey-Fuller est utilisé pour vérifier si la série est temporelle ou non
+Concepts des séries temporelles
+Une série temporelle est une suite d'observations mesurées  à des moments successifs dans le temps, ordonnées chronologiquement et dépendantes dans le temps .
+1:Une série temporelle peut être décomposée en trois composantes principales :
+                             Y(t)=T(t)+S(t)+N(t)
+*Tendance: représente l'évolution globale de la série sur une longue période elle peut être : croissante , décroissante ou stable .
+*Saisonnalité: correspond à des variations qui se répètent régulièrement dans le temps .
+*Bruit: correspond aux fluctuations aléatoires de la série comme erreur ou événements imprévisibles .
 
-La Décomposition : une série temporelles peut etre dcomposée en trois composantes:
-      la tendance : évolution globale à long terme (hausse et baisse)
-      la saisonnalité: motifs cycliques réccurents 
-      Résidu/bruit : composante aléatoire non expliqué par les deux premiéres composantes 
-Ces trois composants aident à mieux comprendre la structure de signal avant modélisation 
+On peut modéliser la relation entre tendance, saisonnalité et bruit de deux façons : modèle additif ou modèle multiplicatif.
+1.1:le modéle additif: 
+Dans le modéle additif les composantes de la série s'additionnant. ce modéle est utilisé lorsque:
+*l'amplitude de la saisonnalité est constante dans le temps
+*les variations saisonnières restent à peu près de même taille
+1.2:le modéle multiplicatif:
+Dans le modéle multiplicatif les composantes se multiplent. Ce modéle est utilisé lorsque:
+*la saisonnalité augmente avec la tendance
+*les variations deviennent plus grandes lorsque la série augmente
+On peut savoir lequel on va utiliser à partir d'une obseravtion du graphique :
+      si fluctuations constantes alors modèle additif
+      si fluctuations augmentent avec la tendance alors modèle multiplicatif
 
-L'Autocorrélation (ACF) : autocorrélation mesure la corrélation entre les valeurs actuelles et ses valeurs passées qui permet :
-      Mesurer la dépendance temporelle : si le passé influence réellement le présent 
-      La taille de la fenétre glissante: dans une approche de regression supervisé on utilise les valeurs passées comme variables explicatives 
-      Identifier des structures saisonniére : des pics dans l'ACF peuvent reveler une saisonnalité 
+2:Autocorrélation:Mesure la relation entre une observation et ses valeurs passées .Elle permet de déterminer si la valeur actuelle dépend des valeurs précédentes. 
+Souvent analysé à l'aide du graphe ACF 
 
-Le Feature Engineering temporel : Une date n'est pas directement exploitable par un modéle donc on doit extraire des variables numériques telle que : 
-    l’heure de la journée :df['heure']=df.index.hour
-    le jour de la semaine: df['jour']=df.index.dayofweek
-    le mois=df['mois']=df.index.month
-    un indicateur permettant de savoir s’il s’agit d’un week-end:df['weekend']=df['jour'].isin([5,6])
+3:Stationnarité:Une série temporelle est dite stationnaire lorsque ses propriétés statistiques restent constantes dans le temps cela signifie que la moyenne ,la variance et la structure de corrélation ne changent pas dans le temps.
+La stationnarité est vérifier avec le test Dickey-Fuller .
+
+4:Rolling Window:Consiste à calculer des statistiques sur un nombre fixe d’observations consécutives
+
+5:Lag:représente une valeur passée d’une série temporelle par exemple valeur à t-1 , t-2 ... Utilisés pour créer des features dans les modèles de machine learning .
+
+6:Différenciation:Consiste à construire une observation de la précédente dans le but de supprimer la tendance et rendre la série stationnaire .
+
+Features pour le Machine Learning
+les features sont construites à partir des données d’utilisation CPU afin de permettre aux modèles de prédire les valeurs futures de l’utilisation CPU des serveurs.
+*Lag features:représentent les valeurs passées de la variable cible.
+*Rolling Mean:correspond à la moyenne calculée sur une fenêtre glissante d’observations.
+*Rolling Standard Deviation(L’écart-type mobile):mesure la dispersion des valeurs dans une fenêtre glissante qui permet d'identifier les  périodes où l’utilisation CPU est stable ou très variable.
+*Differencing Feature:La différence entre deux observations successives reprsentante la variation de l'utilisation CPU permet au modèle de capturer les changements rapides dans la série.
+*Exponential Moving Average:La moyenne mobile exponentielle est une moyenne pondérée qui donne plus d’importance aux observations récentes.
+Cette feature est souvent utilisée pour améliorer la capacité du modèle à détecter les changements récents.
+*Time Features:Les features temporelles sont extraites à partir du timestamp comme l'heure, jour, jour de la semaine.
+Ces variables permettent de capturer des patterns temporels par exemple orte utilisation cpu ou variations entre jours ouvrables et week-end.
