@@ -1,0 +1,21 @@
+# Images générées automatiquement
+*.png
+*.jpg
+*.jpeg
+
+# Données CSV (trop lourdes pour git)
+*.csv
+
+# Modèles sauvegardés
+models/
+*.pkl
+*.joblib
+
+# Fichiers système
+.DS_Store
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Garder le requirements.txt
+!requirements.txt
