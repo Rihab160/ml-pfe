@@ -164,14 +164,8 @@ def make_labels(timestamps):
 
 # ══ SESSION STATE ═════════════════════════════════════════
 if "df_raw" not in st.session_state:
-    try:
-        df_def = pd.read_csv("df_original_ready.csv")
-        df_def = phase2_features(df_def, "df_original_ready")
-        st.session_state.df_raw      = df_def
-        st.session_state.source_name = "df_original_ready.csv"
-    except:
-        st.session_state.df_raw      = None
-        st.session_state.source_name = None
+    st.session_state.df_raw      = None
+    st.session_state.source_name = None
 
 if "email_cfg" not in st.session_state:
     st.session_state.email_cfg = {"to":"","from":"","pwd":"","seuil_w":75,"seuil_c":90,"notif_crit":True,"notif_warn":True,"saved":False}
@@ -179,7 +173,7 @@ if "email_cfg" not in st.session_state:
 # ══ TOPBAR ═══════════════════════════════════════════════
 now_str = datetime.now().strftime("%d %B %Y · %H:%M")
 st.markdown(f"""
-<div style="padding:4px 4px 8px 4px;margin-bottom:8px;">
+<div style="padding:4px 4px 8px 4px;margin-bottom:8px;margin-top:-80px;">
   <div style="font-size:20px;font-weight:700;color:#1E293B;letter-spacing:-0.3px;line-height:1.2">
     AWS CPU Monitor
     <span style="font-size:12px;font-weight:400;color:#94A3B8;margin-left:10px;letter-spacing:0">Prediction &amp; Anomaly Detection</span>
@@ -190,17 +184,7 @@ st.markdown(f"""
 
 # ══ IMPORT ═══════════════════════════════════════════════
 st.markdown('<div class="sec-label">Source de donnees</div>', unsafe_allow_html=True)
-st.markdown('''<div style="background:#fff;border:1px solid #E8ECF0;border-radius:16px;padding:20px 24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    <div>
-      <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Fichier CSV</div>
-    </div>
-    <div>
-      <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">API REST</div>
-    </div>
-  </div>
-</div>''', unsafe_allow_html=True)
-with st.expander("", expanded=st.session_state.df_raw is None):
+with st.expander("Importer un fichier CSV ou se connecter à une API", expanded=st.session_state.df_raw is None):
     c1,c2 = st.columns([4,1])
     with c1: uploaded = st.file_uploader("Glissez un fichier CSV ou cliquez pour parcourir",type=["csv"],label_visibility="visible")
     with c2:
@@ -246,54 +230,31 @@ df_srv_full = df_raw[df_raw["serveur_id"]==srv_sel].sort_values("timestamp").res
 ts_all = pd.to_datetime(df_srv_full["timestamp"])
 ts_min = ts_all.min(); ts_max = ts_all.max()
 
-st.markdown('<div style="background:#fff;border:1px solid #E8ECF0;border-radius:16px;padding:18px 20px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">', unsafe_allow_html=True)
-st.markdown('<div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#378ADD"></span>CPU reel — historique observe</div>', unsafe_allow_html=True)
-cr1,cr2,cr3 = st.columns([2,2,2])
-with cr1:
-    st.markdown('<div style="font-size:10px;font-weight:500;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">De</div>', unsafe_allow_html=True)
-    date_r1  = st.date_input("",value=ts_min.date(),min_value=ts_min.date(),max_value=ts_max.date(),key="dr1",label_visibility="collapsed")
-    heure_r1 = st.time_input("",value=ts_min.time(),key="hr1",label_visibility="collapsed")
-with cr2:
-    st.markdown('<div style="font-size:10px;font-weight:500;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">A</div>', unsafe_allow_html=True)
-    date_r2  = st.date_input("",value=min(ts_max.date(),(ts_min+pd.Timedelta(hours=12)).date()),min_value=ts_min.date(),max_value=ts_max.date(),key="dr2",label_visibility="collapsed")
-    heure_r2 = st.time_input("",value=(ts_min+pd.Timedelta(hours=12)).time(),key="hr2",label_visibility="collapsed")
-with cr3:
-    st.markdown('<div style="font-size:10px;font-weight:500;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Preset</div>', unsafe_allow_html=True)
-    preset_reel = st.selectbox("",["Perso","6h","12h","24h","48h","Tout"],index=2,key="pr_reel",label_visibility="collapsed")
+# ── Durées sur une seule ligne : CPU réel à gauche, CPU prédit à droite
+c_left, c_right = st.columns(2)
+with c_left:
+    st.markdown('<div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#378ADD"></span>Duree CPU reel</div>', unsafe_allow_html=True)
+    preset_reel = st.selectbox("", ["6h","12h","24h","48h","Tout"],
+                                index=1, key="pr_reel", label_visibility="collapsed")
+with c_right:
+    st.markdown('<div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1D9E75"></span>Duree CPU predit</div>', unsafe_allow_html=True)
+    preset_pred = st.selectbox("", ["1h","3h","6h","12h","24h"],
+                                index=2, key="pr_pred", label_visibility="collapsed")
 
-st.markdown('<div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:8px;margin-top:16px;display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1D9E75"></span>CPU predit — horizon futur</div>', unsafe_allow_html=True)
-cp1,cp2,cp3 = st.columns([2,2,2])
-with cp1:
-    st.markdown('<div style="font-size:10px;font-weight:500;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">De</div>', unsafe_allow_html=True)
-    date_p1  = st.date_input("",value=min(ts_max.date(),(ts_min+pd.Timedelta(hours=12)).date()),min_value=ts_min.date(),max_value=ts_max.date(),key="dp1",label_visibility="collapsed")
-    heure_p1 = st.time_input("",value=(ts_min+pd.Timedelta(hours=12)).time(),key="hp1",label_visibility="collapsed")
-with cp2:
-    st.markdown('<div style="font-size:10px;font-weight:500;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">A</div>', unsafe_allow_html=True)
-    date_p2  = st.date_input("",value=min(ts_max.date(),(ts_min+pd.Timedelta(hours=24)).date()),min_value=ts_min.date(),max_value=ts_max.date(),key="dp2",label_visibility="collapsed")
-    heure_p2 = st.time_input("",value=(ts_min+pd.Timedelta(hours=24)).time(),key="hp2",label_visibility="collapsed")
-with cp3:
-    st.markdown('<div style="font-size:10px;font-weight:500;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Preset</div>', unsafe_allow_html=True)
-    preset_pred = st.selectbox("",["Perso","1h","3h","6h","12h","24h"],index=3,key="pr_pred",label_visibility="collapsed")
-
-# Calcul timestamps
+# Calcul timestamps — preset uniquement (pas de calendrier)
 durees_map = {"1h":1,"3h":3,"6h":6,"12h":12,"24h":24,"48h":48}
-if preset_reel != "Perso":
-    if preset_reel == "Tout": dt_reel_debut,dt_reel_fin = ts_min,ts_max
-    else: dt_reel_debut,dt_reel_fin = ts_min, ts_min+pd.Timedelta(hours=durees_map[preset_reel])
+if preset_reel == "Tout":
+    dt_reel_debut, dt_reel_fin = ts_min, ts_max
 else:
-    dt_reel_debut = pd.Timestamp(datetime.combine(date_r1,heure_r1))
-    dt_reel_fin   = pd.Timestamp(datetime.combine(date_r2,heure_r2))
+    dt_reel_debut = ts_min
+    dt_reel_fin   = ts_min + pd.Timedelta(hours=durees_map[preset_reel])
 
-if preset_pred != "Perso":
-    dt_pred_debut = dt_reel_fin
-    dt_pred_fin   = dt_pred_debut + pd.Timedelta(hours=durees_map.get(preset_pred,6))
-else:
-    dt_pred_debut = pd.Timestamp(datetime.combine(date_p1,heure_p1))
-    dt_pred_fin   = pd.Timestamp(datetime.combine(date_p2,heure_p2))
+dt_pred_debut = dt_reel_fin
+dt_pred_fin   = dt_pred_debut + pd.Timedelta(hours=durees_map.get(preset_pred, 6))
 
-dt_reel_fin   = min(dt_reel_fin,  ts_max)
-dt_pred_debut = min(dt_pred_debut,ts_max)
-dt_pred_fin   = min(dt_pred_fin,  ts_max)
+dt_reel_fin   = min(dt_reel_fin,   ts_max)
+dt_pred_debut = min(dt_pred_debut, ts_max)
+dt_pred_fin   = min(dt_pred_fin,   ts_max)
 
 mask_all = (ts_all >= dt_reel_debut) & (ts_all <= dt_pred_fin)
 df_srv   = df_srv_full[mask_all].reset_index(drop=True)
@@ -303,8 +264,7 @@ if len(df_srv) < 20:
 st.markdown(
     f'<div style="font-size:10px;color:#64748B;margin-top:12px;padding:8px 12px;background:#F8FAFC;border-radius:8px;border:1px solid #E8ECF0;">' +
     f'<span style="color:#185FA5;font-weight:600">CPU reel</span> : {dt_reel_debut.strftime("%d/%m %H:%M")} → {dt_reel_fin.strftime("%d/%m %H:%M")}' +
-    f' &nbsp;&nbsp;·&nbsp;&nbsp; <span style="color:#1D9E75;font-weight:600">CPU predit</span> : {dt_pred_debut.strftime("%d/%m %H:%M")} → {dt_pred_fin.strftime("%d/%m %H:%M")}</div>' +
-    f'</div>',
+    f' &nbsp;&nbsp;·&nbsp;&nbsp; <span style="color:#1D9E75;font-weight:600">CPU predit</span> : {dt_pred_debut.strftime("%d/%m %H:%M")} → {dt_pred_fin.strftime("%d/%m %H:%M")}</div>',
     unsafe_allow_html=True)
 
 # ══ PIPELINE ═════════════════════════════════════════════
@@ -398,7 +358,7 @@ st.markdown(f"""
   <div class="mcard"><div class="mlabel">Anomalies detectees</div>
     <div class="mval" style="color:{col_anom}">{n_anom}</div>
     <div class="msub" style="color:#A32D2D">{n_crit} critiques · score≥0.6</div></div>
-  <div class="mcard"><div class="mlabel">XGBoost (Phase 3)</div>
+  <div class="mcard"><div class="mlabel">XGBoost(T+5mins)</div>
     <div class="mval" style="color:#185FA5">{cpu_pred:.1f}%</div>
     <div class="msub" style="color:var(--color-text-secondary)">MAE {mae_display} · R² {r2_display}</div></div>
 </div>
@@ -437,7 +397,6 @@ body{{background:transparent;padding:0;}}
   <div class="legend">
     <div class="li"><div class="ll" style="background:#378ADD"></div>CPU reel (historique)</div>
     <div class="li"><div class="ll" style="background:#E24B4A"></div>seuil p95</div>
-    <div class="li"><div class="ld" style="background:#E24B4A"></div>anomalie</div>
   </div>
 </div>
 <div class="card">
@@ -479,8 +438,8 @@ const pred      = {pred_js};
 const thr_pred  = {thr_pred_js};
 const gridC = "rgba(128,128,128,0.12)";
 const tFont = {{size:10}};
-const mkX = () => ({{grid:{{color:gridC}},ticks:{{font:tFont,maxRotation:0,maxTicksLimit:25,
-  callback:function(val,idx){{const lv=this.getLabelForValue(val);return (lv&&lv.slice(-3)===":00")?lv:"";}}
+const mkX = () => ({{grid:{{color:gridC}},ticks:{{font:tFont,maxRotation:0,autoSkip:true,maxTicksLimit:72,
+  callback:function(val,idx){{const lv=this.getLabelForValue(val);return lv?lv:"";}}
 }}}});
 const yAxis = {{min:0,max:100,grid:{{color:gridC}},ticks:{{font:tFont}}}};
 const mkBase = () => ({{responsive:true,maintainAspectRatio:false,animation:false,
@@ -490,7 +449,6 @@ const mkBase = () => ({{responsive:true,maintainAspectRatio:false,animation:fals
 new Chart(document.getElementById("c1"),{{type:"line",data:{{labels:lbl_reel,datasets:[
   {{data:real,borderColor:"#378ADD",borderWidth:1.5,pointRadius:0,tension:.2,fill:"origin"}},
   {{data:thr_reel,borderColor:"#E24B4A",borderWidth:1.2,borderDash:[5,3],pointRadius:0,fill:false}},
-  {{type:"scatter",data:anom,backgroundColor:"#E24B4A",pointRadius:5,pointHoverRadius:7}}
 ]}},options:mkBase()}});
 
 // c2 — CPU predit sur sa propre fenetre
